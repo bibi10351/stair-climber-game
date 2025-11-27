@@ -77,6 +77,10 @@ let touchX = null;
 
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
+    if (isGameOver) {
+        resetGame();
+        return;
+    }
     touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
     // Scale touch coordinate if canvas is resized via CSS
     const scaleX = canvas.width / canvas.getBoundingClientRect().width;
