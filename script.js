@@ -24,6 +24,8 @@ const TYPE_PROBABILITIES = {
     SPIKE: 0.05
 };
 
+const STAR_COUNT = 150;
+
 // Game State
 let score = 0;
 let isGameOver = false;
@@ -46,6 +48,9 @@ const player = {
 
 // Platforms Array
 let platforms = [];
+
+// Stars Array
+let stars = [];
 
 // Input Handling
 const keys = {
@@ -105,6 +110,19 @@ function resetGame() {
     platforms = [];
     // Initial Platform
     platforms.push({ x: 150, y: 500, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT, color: '#4CAF50', type: PLATFORM_TYPES.NORMAL });
+
+    initStars();
+}
+
+function initStars() {
+    stars = [];
+    for (let i = 0; i < STAR_COUNT; i++) {
+        stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 1
+        });
+    }
 }
 
 function spawnPlatform() {
@@ -241,18 +259,33 @@ function update() {
                 player.onGround = true;
             }
         }
-
-        // Game Over Conditions
-        if (player.y < 0 || player.y > canvas.height) {
-            isGameOver = true;
-        }
     }
 
+    // Game Over Conditions
+    if (player.y < 0 || player.y > canvas.height) {
+        isGameOver = true;
+    }
+
+    // Update Stars
+    for (let star of stars) {
+        star.y += currentPlatformSpeed * 0.5;
+        if (star.y > canvas.height) {
+            star.y = 0;
+            star.x = Math.random() * canvas.width;
+        }
+    }
 }
 
-
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw Background
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Stars
+    ctx.fillStyle = '#fff';
+    for (let star of stars) {
+        ctx.fillRect(star.x, star.y, star.size, star.size);
+    }
 
     // Draw Platforms
     for (let p of platforms) {
