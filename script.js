@@ -2,8 +2,8 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Game Constants
-const GRAVITY = 0.4;
-const PLAYER_SPEED = 5;
+const GRAVITY = 0.25; // Reduced gravity for slower fall
+const PLAYER_SPEED = 3; // Reduced speed for better precision
 const PLATFORM_WIDTH = 100; // Fixed Platform Width
 const PLATFORM_HEIGHT = 15;
 const MIN_Y_GAP = 80; // Minimum vertical distance between platforms
@@ -54,6 +54,29 @@ document.addEventListener('keyup', (e) => {
     if (e.code === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
     if (e.code === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
 });
+
+// Touch Controls
+let touchX = null;
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+    // Scale touch coordinate if canvas is resized via CSS
+    const scaleX = canvas.width / canvas.getBoundingClientRect().width;
+    touchX *= scaleX;
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+    const scaleX = canvas.width / canvas.getBoundingClientRect().width;
+    touchX *= scaleX;
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    touchX = null;
+}, { passive: false });
 
 function resetGame() {
     player.x = 200;
@@ -118,9 +141,26 @@ function spawnPlatform() {
 function update() {
     if (isGameOver) return;
 
-    // Horizontal Movement
-    if (keys.left) player.x -= PLAYER_SPEED;
-    if (keys.right) player.x += PLAYER_SPEED;
+    // Horizontal Movement (Keyboard OR Touch)
+    let moveLeft = keys.left;
+    let moveRight = keys.right;
+
+    if (touchX !== null) {
+        // Simple "Move towards touch" logic
+        // If touch is to the left of player center, move left
+        // If touch is to the right of player center, move right
+        // Add a small deadzone to prevent jitter
+        if (touchX < player.x + player.width / 2 - 5) {
+            moveLeft = true;
+            moveRight = false;
+        } else if (touchX > player.x + player.width / 2 + 5) {
+            moveRight = true;
+            moveLeft = false;
+        }
+    }
+
+    if (moveLeft) player.x -= PLAYER_SPEED;
+    if (moveRight) player.x += PLAYER_SPEED;
 
     // Boundary Checks
     if (player.x < 0) player.x = 0;
