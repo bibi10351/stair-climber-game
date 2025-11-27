@@ -1,0 +1,31 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #222;
+    color: #fff;
+    font-family: sans-serif;
+}
+
+#game-container {
+    text-align: center;
+}
+
+canvas {
+    background-color: #333;
+    border: 2px solid #555;
+    display: block;
+    margin-bottom: 10px;
+}
+
+#instructions {
+    font-size: 14px;
+    color: #aaa;
+}
