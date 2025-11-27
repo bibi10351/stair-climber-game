@@ -13,12 +13,24 @@ const GAME_SPEED_INCREMENT = 0.1; // Speed increase per difficulty level (Reduce
 const MAX_Y_GAP_INCREMENT = 5; // Gap increase per difficulty level (Reduced)
 const DIFFICULTY_INTERVAL = 10; // Increase difficulty every 10 score points (Slower leveling)
 
+// Platform Types
+const PLATFORM_TYPES = {
+    NORMAL: 'NORMAL',
+    SPIKE: 'SPIKE'
+};
+
+const TYPE_PROBABILITIES = {
+    NORMAL: 0.95,
+    SPIKE: 0.05
+};
+
 // Game State
 let score = 0;
 let isGameOver = false;
 let currentPlatformSpeed = INITIAL_SPEED;
 let currentMaxYGap = INITIAL_MAX_Y_GAP;
 let nextSpawnDistance = 100; // Distance to wait before spawning next platform
+let consecutiveSpikes = 0;
 
 // Player Object
 const player = {
@@ -86,11 +98,13 @@ function resetGame() {
     isGameOver = false;
     currentPlatformSpeed = INITIAL_SPEED;
     currentMaxYGap = INITIAL_MAX_Y_GAP;
+    currentMaxYGap = INITIAL_MAX_Y_GAP;
     nextSpawnDistance = 100;
+    consecutiveSpikes = 0;
 
     platforms = [];
     // Initial Platform
-    platforms.push({ x: 150, y: 500, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT, color: '#4CAF50' });
+    platforms.push({ x: 150, y: 500, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT, color: '#4CAF50', type: PLATFORM_TYPES.NORMAL });
 }
 
 function spawnPlatform() {
@@ -115,12 +129,37 @@ function spawnPlatform() {
 
         const x = Math.random() * (maxX - minX) + minX;
 
+        // Determine Platform Type
+        let type = PLATFORM_TYPES.NORMAL;
+
+        // Safety: Prevent consecutive spikes
+        if (consecutiveSpikes >= 1) {
+            type = PLATFORM_TYPES.NORMAL;
+        } else {
+            const rand = Math.random();
+            if (rand > TYPE_PROBABILITIES.NORMAL) {
+                type = PLATFORM_TYPES.SPIKE;
+            } else {
+                type = PLATFORM_TYPES.NORMAL;
+            }
+        }
+
+        // Update consecutive spikes counter
+        if (type === PLATFORM_TYPES.SPIKE) {
+            consecutiveSpikes++;
+        } else {
+            consecutiveSpikes = 0;
+        }
+
+        const color = (type === PLATFORM_TYPES.SPIKE) ? '#FF0000' : '#4CAF50';
+
         platforms.push({
             x: x,
             y: canvas.height,
             width: PLATFORM_WIDTH,
             height: PLATFORM_HEIGHT,
-            color: '#4CAF50'
+            color: color,
+            type: type
         });
 
         score++;
@@ -194,17 +233,23 @@ function update() {
             player.x + player.width > p.x &&
             player.x < p.x + p.width
         ) {
-            player.dy = 0;
-            player.y = p.y - player.height;
-            player.onGround = true;
+            if (p.type === PLATFORM_TYPES.SPIKE) {
+                isGameOver = true;
+            } else {
+                player.dy = 0;
+                player.y = p.y - player.height;
+                player.onGround = true;
+            }
+        }
+
+        // Game Over Conditions
+        if (player.y < 0 || player.y > canvas.height) {
+            isGameOver = true;
         }
     }
 
-    // Game Over Conditions
-    if (player.y < 0 || player.y > canvas.height) {
-        isGameOver = true;
-    }
 }
+
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
